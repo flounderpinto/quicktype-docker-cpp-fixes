@@ -1,6 +1,8 @@
 FROM ubuntu:22.04
 
 ARG DEBIAN_FRONTEND=noninteractive
+ARG QUICKTYPE_VERSION=29bb8160660a7daa2a837ac0cb1e92f99729ad8e
+COPY docker/2674.patch /opt/2674.patch
 RUN apt update && \
     apt install -y \
        curl \
@@ -27,9 +29,8 @@ RUN apt update && \
     cd "/opt" && \
     git clone --depth 1 https://github.com/glideapps/quicktype.git && \
     cd "/opt/quicktype" && \
-    git checkout 29bb8160660a7daa2a837ac0cb1e92f99729ad8e && \
-    CPP_FILE="/opt/quicktype/packages/quicktype-core/src/language/CPlusPlus/CPlusPlusRenderer.ts" && \
-    sed -i 's|                    (property.isOptional && property.type.kind !== "null" && property.type.kind !== "any")|                    false|' "$CPP_FILE" && \
+    git checkout $QUICKTYPE_VERSION && \
+    git apply /opt/2674.patch && \
 #Build
     npm install && \
     npm audit fix | true && \

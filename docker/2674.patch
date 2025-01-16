@@ -1,0 +1,160 @@
+---
+ .../src/language/CPlusPlus/CPlusPlusRenderer.ts              | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/packages/quicktype-core/src/language/CPlusPlus/CPlusPlusRenderer.ts b/packages/quicktype-core/src/language/CPlusPlus/CPlusPlusRenderer.ts
+index 4b70339f2..90b5e8e4c 100644
+--- a/packages/quicktype-core/src/language/CPlusPlus/CPlusPlusRenderer.ts
++++ b/packages/quicktype-core/src/language/CPlusPlus/CPlusPlusRenderer.ts
+@@ -848,10 +848,7 @@ export class CPlusPlusRenderer extends ConvenienceRenderer {
+                  * a member called 'value' value = value will screw up the compiler
+                  */
+                 const checkConst = this.lookupGlobalName(GlobalNames.CheckConstraint);
+-                if (
+-                    (property.type instanceof UnionType && property.type.findMember("null") !== undefined) ||
+-                    (property.isOptional && property.type.kind !== "null" && property.type.kind !== "any")
+-                ) {
++                if (property.type instanceof UnionType && property.type.findMember("null") !== undefined) {
+                     this.emitLine(rendered, " ", getterName, "() const { return ", name, "; }");
+                     if (constraints?.has(jsonName)) {
+                         this.emitLine(
+
+---
+ .../quicktype-core/src/language/CPlusPlus/CPlusPlusRenderer.ts  | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/packages/quicktype-core/src/language/CPlusPlus/CPlusPlusRenderer.ts b/packages/quicktype-core/src/language/CPlusPlus/CPlusPlusRenderer.ts
+index 90b5e8e4c..dc0672987 100644
+--- a/packages/quicktype-core/src/language/CPlusPlus/CPlusPlusRenderer.ts
++++ b/packages/quicktype-core/src/language/CPlusPlus/CPlusPlusRenderer.ts
+@@ -848,7 +848,7 @@ export class CPlusPlusRenderer extends ConvenienceRenderer {
+                  * a member called 'value' value = value will screw up the compiler
+                  */
+                 const checkConst = this.lookupGlobalName(GlobalNames.CheckConstraint);
+-                if (property.type instanceof UnionType && property.type.findMember("null") !== undefined) {
++                if (property.type instanceof UnionType && property.type.findMember("null") !== undefined)  {
+                     this.emitLine(rendered, " ", getterName, "() const { return ", name, "; }");
+                     if (constraints?.has(jsonName)) {
+                         this.emitLine(
+
+---
+ .../quicktype-core/src/language/CPlusPlus/CPlusPlusRenderer.ts  | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/packages/quicktype-core/src/language/CPlusPlus/CPlusPlusRenderer.ts b/packages/quicktype-core/src/language/CPlusPlus/CPlusPlusRenderer.ts
+index dc0672987..90b5e8e4c 100644
+--- a/packages/quicktype-core/src/language/CPlusPlus/CPlusPlusRenderer.ts
++++ b/packages/quicktype-core/src/language/CPlusPlus/CPlusPlusRenderer.ts
+@@ -848,7 +848,7 @@ export class CPlusPlusRenderer extends ConvenienceRenderer {
+                  * a member called 'value' value = value will screw up the compiler
+                  */
+                 const checkConst = this.lookupGlobalName(GlobalNames.CheckConstraint);
+-                if (property.type instanceof UnionType && property.type.findMember("null") !== undefined)  {
++                if (property.type instanceof UnionType && property.type.findMember("null") !== undefined) {
+                     this.emitLine(rendered, " ", getterName, "() const { return ", name, "; }");
+                     if (constraints?.has(jsonName)) {
+                         this.emitLine(
+
+---
+ .../language/CPlusPlus/CPlusPlusRenderer.ts   | 74 ++++++++++++++++++-
+ 1 file changed, 73 insertions(+), 1 deletion(-)
+
+diff --git a/packages/quicktype-core/src/language/CPlusPlus/CPlusPlusRenderer.ts b/packages/quicktype-core/src/language/CPlusPlus/CPlusPlusRenderer.ts
+index 90b5e8e4c..03783b0f8 100644
+--- a/packages/quicktype-core/src/language/CPlusPlus/CPlusPlusRenderer.ts
++++ b/packages/quicktype-core/src/language/CPlusPlus/CPlusPlusRenderer.ts
+@@ -1829,6 +1829,40 @@ export class CPlusPlusRenderer extends ConvenienceRenderer {
+                 this.ensureBlankLine();
+             }
+         );
++
++        this.ensureBlankLine();
++
++        this.emitBlock(
++            [
++                "inline void ",
++                checkConst,
++                "(",
++                this._stringType.getConstType(),
++                " name, ",
++                this.withConst(classConstraint),
++                " & c, ",
++                "const ",
++                this._optionalType,
++                "<",
++                cppType,
++                "> & value)"
++            ],
++            false,
++            () => {
++                this.emitBlock(
++                    ["if (value)"],
++                    false,
++                    () => {
++                        this.emitLine(
++                            checkConst,
++                            "(name, c, *value);"
++                        );
++                    }
++                );
++                this.ensureBlankLine();
++            }
++        );
++
+         this.ensureBlankLine();
+     }
+ 
+@@ -1918,7 +1952,12 @@ export class CPlusPlusRenderer extends ConvenienceRenderer {
+         }
+ 
+         const checkConst = this.lookupGlobalName(GlobalNames.CheckConstraint);
+-        this.emitNumericCheckConstraints(checkConst, classConstraint, getterMinIntValue, getterMaxIntValue, "int64_t");
++        this.emitNumericCheckConstraints(
++            checkConst,
++            classConstraint,
++            getterMinIntValue,
++            getterMaxIntValue,
++            "int64_t");
+         this.emitNumericCheckConstraints(
+             checkConst,
+             classConstraint,
+@@ -2037,6 +2076,39 @@ export class CPlusPlusRenderer extends ConvenienceRenderer {
+                 this.ensureBlankLine();
+             }
+         );
++
++        this.ensureBlankLine();
++
++        this.emitBlock(
++            [
++                "inline void ",
++                checkConst,
++                "(",
++                this._stringType.getConstType(),
++                " name, ",
++                this.withConst(classConstraint),
++                " & c, ",
++                "const ",
++                this._optionalType,
++                "<",
++                this._stringType.getType(),
++                ">& value)"
++            ],
++            false,
++            () => {
++                this.emitBlock(
++                    ["if (value)"],
++                    false,
++                    () => {
++                        this.emitLine(
++                            checkConst,
++                            "(name, c, *value);"
++                        );
++                    }
++                );
++                this.ensureBlankLine();
++            }
++        );
+     }
+ 
+     protected emitHelperFunctions(): void {
